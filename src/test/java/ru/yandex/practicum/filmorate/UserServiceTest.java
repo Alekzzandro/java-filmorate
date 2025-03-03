@@ -1,10 +1,10 @@
 package ru.yandex.practicum.filmorate;
-import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.User;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.time.LocalDate;
@@ -115,16 +115,16 @@ public class UserServiceTest {
     public void testAddUserDuplicateEmail() throws ValidationException, DuplicatedDataException {
         User user1 = new User();
         user1.setEmail("test@example.com");
-        user1.setLogin("testlogin1");
-        user1.setName("Test Name 1");
-        user1.setBirthday(LocalDate.of(2000, 1, 1));
+        user1.setLogin("user1login");
+        user1.setName("User One");
+        user1.setBirthday(LocalDate.of(1995, 1, 1));
         userService.addUser(user1);
 
         User user2 = new User();
-        user2.setEmail("test@example.com");
-        user2.setLogin("testlogin2");
-        user2.setName("Test Name 2");
-        user2.setBirthday(LocalDate.of(2001, 1, 1));
+        user2.setEmail("test@example.com"); // тот же email
+        user2.setLogin("user2login");
+        user2.setName("User Two");
+        user2.setBirthday(LocalDate.of(1997, 1, 1));
 
         DuplicatedDataException exception = assertThrows(DuplicatedDataException.class, () -> {
             userService.addUser(user2);

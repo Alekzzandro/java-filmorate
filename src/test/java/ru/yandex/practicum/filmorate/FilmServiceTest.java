@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -72,7 +72,7 @@ public class FilmServiceTest {
 		Film film = new Film();
 		film.setName("Test Film");
 		film.setDescription("Description of test film");
-		film.setReleaseDate(LocalDate.of(1895, 12, 27));
+		film.setReleaseDate(LocalDate.of(1895, 12, 27)); // дата раньше 28 декабря 1895
 		film.setDuration(120);
 
 		ValidationException exception = assertThrows(ValidationException.class, () -> {
