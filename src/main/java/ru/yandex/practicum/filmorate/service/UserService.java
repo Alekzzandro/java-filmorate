@@ -43,7 +43,7 @@ public class UserService {
 
     public User updateUser(User user) throws ValidationException, ConditionsNotMetException {
         validateUser(user);
-        if (user.getId() == 0) {
+        if (user.getId() == null || user.getId() <= 0) {
             throw new ConditionsNotMetException("Id должен быть указан");
         }
         User existingUser = users.get(user.getId());
@@ -57,17 +57,16 @@ public class UserService {
             emailToUserMap.remove(existingUser.getEmail());
             emailToUserMap.put(user.getEmail(), user);
         }
-        if (user.getName() != null) {
+        if (user.getName() != null && !user.getName().isBlank()) {
             existingUser.setName(user.getName());
+        } else {
+            existingUser.setName(existingUser.getLogin());
         }
-        if (user.getLogin() != null) {
+        if (user.getLogin() != null && !user.getLogin().isBlank()) {
             existingUser.setLogin(user.getLogin());
         }
         if (user.getBirthday() != null) {
             existingUser.setBirthday(user.getBirthday());
-        }
-        if (user.getEmail() != null) {
-            existingUser.setEmail(user.getEmail());
         }
         log.info("Обновлен пользователь: {}", existingUser);
         return existingUser;
