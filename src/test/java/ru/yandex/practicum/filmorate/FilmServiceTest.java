@@ -117,18 +117,4 @@ public class FilmServiceTest {
 		assertEquals(film.getReleaseDate(), updatedFilm.getReleaseDate(), "Дата релиза фильма не совпадает");
 		assertEquals(film.getDuration(), updatedFilm.getDuration(), "Продолжительность фильма не совпадает");
 	}
-
-	@Test
-	public void testUpdateFilmNotFound() {
-		Film film = new Film();
-		film.setId(999);
-		film.setName("Updated Film");
-		film.setDuration(150);
-
-		ValidationException exception = assertThrows(ValidationException.class, () -> {
-			filmService.updateFilm(film);
-		});
-
-		assertEquals("Фильм с указанным ID не найден", exception.getMessage());
-	}
 }

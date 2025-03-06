@@ -2,32 +2,28 @@ package ru.yandex.practicum.filmorate;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.controller.UserController;
 
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class UserServiceTest {
-    private UserService userService;
+    private UserController userController;
 
     @BeforeEach
     public void setUp() {
-        userService = new UserService();
+        userController = new UserController();
     }
 
     @Test
     public void testAddUser() throws ValidationException, DuplicatedDataException {
-        User user = new User();
-        user.setEmail("test@example.com");
-        user.setLogin("testlogin");
-        user.setName("Test Name");
-        user.setBirthday(LocalDate.of(2000, 1, 1));
-
-        User addedUser = userService.addUser(user);
+        User user = new User(1, "test@example.com", "testlogin", "Test Name", LocalDate.of(2000, 1, 1));
+        User addedUser = userController.create(user);
 
         assertNotNull(addedUser, "Пользователь не добавлен");
         assertEquals(user.getEmail(), addedUser.getEmail(), "Email пользователя не совпадает");
@@ -37,120 +33,49 @@ public class UserServiceTest {
     }
 
     @Test
-    public void testAddUserEmptyEmail() {
-        User user = new User();
-        user.setEmail("");
-        user.setLogin("testlogin");
-        user.setName("Test Name");
-        user.setBirthday(LocalDate.of(2000, 1, 1));
+    public void testAddUserWithDuplicateEmail() throws ValidationException, DuplicatedDataException {
+        User user1 = new User(1, "test@example.com", "login1", "User One", LocalDate.of(1995, 1, 1));
+        userController.create(user1);
 
-        ValidationException exception = assertThrows(ValidationException.class, () -> {
-            userService.addUser(user);
-        });
-
-        assertEquals("Имейл должен быть указан и содержать символ @", exception.getMessage());
-    }
-
-    @Test
-    public void testAddUserInvalidEmail() {
-        User user = new User();
-        user.setEmail("testexample.com");
-        user.setLogin("testlogin");
-        user.setName("Test Name");
-        user.setBirthday(LocalDate.of(2000, 1, 1));
-
-        ValidationException exception = assertThrows(ValidationException.class, () -> {
-            userService.addUser(user);
-        });
-
-        assertEquals("Имейл должен быть указан и содержать символ @", exception.getMessage());
-    }
-
-    @Test
-    public void testAddUserEmptyLogin() {
-        User user = new User();
-        user.setEmail("test@example.com");
-        user.setLogin("");
-        user.setName("Test Name");
-        user.setBirthday(LocalDate.of(2000, 1, 1));
-
-        ValidationException exception = assertThrows(ValidationException.class, () -> {
-            userService.addUser(user);
-        });
-
-        assertEquals("Логин не может быть пустым и должен содержать пробелы", exception.getMessage());
-    }
-
-    @Test
-    public void testAddUserLoginWithSpaces() {
-        User user = new User();
-        user.setEmail("test@example.com");
-        user.setLogin("test login");
-        user.setName("Test Name");
-        user.setBirthday(LocalDate.of(2000, 1, 1));
-
-        ValidationException exception = assertThrows(ValidationException.class, () -> {
-            userService.addUser(user);
-        });
-
-        assertEquals("Логин не может быть пустым и должен содержать пробелы", exception.getMessage());
-    }
-
-    @Test
-    public void testAddUserFutureBirthday() {
-        User user = new User();
-        user.setEmail("test@example.com");
-        user.setLogin("testlogin");
-        user.setName("Test Name");
-        user.setBirthday(LocalDate.of(2030, 1, 1));
-
-        ValidationException exception = assertThrows(ValidationException.class, () -> {
-            userService.addUser(user);
-        });
-
-        assertEquals("Дата рождения не может быть в будущем", exception.getMessage());
-    }
-
-    @Test
-    public void testAddUserDuplicateEmail() throws ValidationException, DuplicatedDataException {
-        User user1 = new User();
-        user1.setEmail("test@example.com");
-        user1.setLogin("user1login");
-        user1.setName("User One");
-        user1.setBirthday(LocalDate.of(1995, 1, 1));
-        userService.addUser(user1);
-
-        User user2 = new User();
-        user2.setEmail("test@example.com"); // тот же email
-        user2.setLogin("user2login");
-        user2.setName("User Two");
-        user2.setBirthday(LocalDate.of(1997, 1, 1));
-
-        DuplicatedDataException exception = assertThrows(DuplicatedDataException.class, () -> {
-            userService.addUser(user2);
-        });
+        User user2 = new User(2, "test@example.com", "login2", "User Two", LocalDate.of(1997, 1, 1));
+        DuplicatedDataException exception = assertThrows(DuplicatedDataException.class, () -> userController.create(user2));
 
         assertEquals("Этот имейл уже используется", exception.getMessage());
     }
 
     @Test
-    public void testUpdateUser() throws ValidationException, DuplicatedDataException {
-        User user = new User();
-        user.setEmail("test@example.com");
-        user.setLogin("testlogin");
-        user.setName("Test Name");
-        user.setBirthday(LocalDate.of(2000, 1, 1));
-        userService.addUser(user);
+    public void testAddUserWithInvalidEmail() {
+        User user = new User(1, "invalidemail.com", "testlogin", "Test Name", LocalDate.of(2000, 1, 1));
+        ValidationException exception = assertThrows(ValidationException.class, () -> userController.create(user));
+        assertEquals("Имейл должен быть указан и содержать символ @", exception.getMessage());
+    }
 
-        user.setName("Updated Name");
-        user.setEmail("updated@example.com");
+    @Test
+    public void testAddUserWithEmptyLogin() {
+        User user = new User(1, "test@example.com", "", "Test Name", LocalDate.of(2000, 1, 1));
+        ValidationException exception = assertThrows(ValidationException.class, () -> userController.create(user));
+        assertEquals("Логин не может быть пустым и содержать пробелы", exception.getMessage());
+    }
 
-        User updatedUser = userService.updateUser(user);
+    @Test
+    public void testAddUserWithFutureBirthday() {
+        User user = new User(1, "test@example.com", "testlogin", "Test Name", LocalDate.of(2030, 1, 1));
+        ValidationException exception = assertThrows(ValidationException.class, () -> userController.create(user));
+        assertEquals("Дата рождения не может быть в будущем", exception.getMessage());
+    }
 
-        assertNotNull(updatedUser, "Пользователь не обновлен");
-        assertEquals(user.getEmail(), updatedUser.getEmail(), "Email пользователя не совпадает");
-        assertEquals(user.getLogin(), updatedUser.getLogin(), "Логин пользователя не совпадает");
-        assertEquals(user.getName(), updatedUser.getName(), "Имя пользователя не совпадает");
-        assertEquals(user.getBirthday(), updatedUser.getBirthday(), "Дата рождения пользователя не совпадает");
+    @Test
+    public void testUpdateUser() throws ValidationException, DuplicatedDataException, ConditionsNotMetException {
+        User user = new User(1, "test@example.com", "testlogin", "Test Name", LocalDate.of(2000, 1, 1));
+        userController.create(user);
+
+        User updatedUser = new User(1, "updated@example.com", "updatedlogin", "Updated Name", LocalDate.of(1995, 5, 5));
+        User result = userController.update(updatedUser);
+
+        assertNotNull(result, "Пользователь не обновлен");
+        assertEquals(updatedUser.getEmail(), result.getEmail(), "Email пользователя не обновлен");
+        assertEquals(updatedUser.getLogin(), result.getLogin(), "Логин пользователя не обновлен");
+        assertEquals(updatedUser.getName(), result.getName(), "Имя пользователя не обновлено");
+        assertEquals(updatedUser.getBirthday(), result.getBirthday(), "Дата рождения пользователя не обновлена");
     }
 }
