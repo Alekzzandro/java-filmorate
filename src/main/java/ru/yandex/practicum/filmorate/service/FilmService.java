@@ -1,40 +1,37 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-
-import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class FilmService {
-    private final Map<Integer, Film> films = new HashMap<>();
-    private int nextId = 1;
+    private final FilmStorage filmStorage;
 
-    private int getNextId() {
-        return nextId++;
+    @Autowired
+    public FilmService(FilmStorage filmStorage) {
+        this.filmStorage = filmStorage;
     }
 
     public List<Film> getAllFilms() {
         log.info("Запрошены все фильмы");
-        return new ArrayList<>(films.values());
+        return filmStorage.getAllFilms();
     }
 
     public Film addFilm(Film film) throws ValidationException {
         log.info("Добавление нового фильма: {}", film);
         validateFilm(film);
-        film.setId(getNextId());
-        films.put(film.getId(), film);
-        log.info("Добавлен фильм: {}", film);
-        return film;
+        return filmStorage.addFilm(film);
     }
 
     public Film updateFilm(Film film) throws ValidationException, NotFoundException {
@@ -43,14 +40,45 @@ public class FilmService {
             log.error("ID фильма не указан или некорректен: {}", film.getId());
             throw new ValidationException("ID фильма должен быть указан и положительным числом");
         }
-        if (!films.containsKey(film.getId())) {
+        if (!filmStorage.getFilmById(film.getId()).isPresent()) {
             log.error("Фильм с указанным ID не найден: {}", film.getId());
             throw new NotFoundException("Фильм с указанным ID не найден");
         }
         validateFilm(film);
-        films.put(film.getId(), film);
-        log.info("Обновлен фильм: {}", film);
-        return film;
+        return filmStorage.updateFilm(film);
+    }
+
+    public Film getFilmById(int id) {
+        log.info("Запрос фильма по ID: {}", id);
+        return filmStorage.getFilmById(id)
+                .orElseThrow(() -> new NotFoundException("Фильм с указанным ID не найден"));
+    }
+
+    public void addLike(int filmId, int userId) {
+        log.info("Добавление лайка пользователем {} фильму {}", userId, filmId);
+        Film film = getFilmById(filmId);
+        if (film.getLikes() == null) {
+            film.setLikes(new HashSet<>());
+        }
+        film.getLikes().add(userId);
+        filmStorage.updateFilm(film);
+    }
+
+    public void removeLike(int filmId, int userId) {
+        log.info("Удаление лайка пользователем {} фильму {}", userId, filmId);
+        Film film = getFilmById(filmId);
+        if (film.getLikes() != null) {
+            film.getLikes().remove(userId);
+        }
+        filmStorage.updateFilm(film);
+    }
+
+    public List<Film> getPopularFilms(int count) {
+        log.info("Запрошены {} самых популярных фильмов", count);
+        return filmStorage.getAllFilms().stream()
+                .sorted((f1, f2) -> Integer.compare(f2.getLikes().size(), f1.getLikes().size()))
+                .limit(count)
+                .collect(Collectors.toList());
     }
 
     private void validateFilm(Film film) throws ValidationException {
@@ -76,4 +104,3 @@ public class FilmService {
         }
     }
 }
-

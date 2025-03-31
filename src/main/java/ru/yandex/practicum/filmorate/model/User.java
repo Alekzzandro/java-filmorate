@@ -9,6 +9,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -32,12 +34,20 @@ public class User {
     @PastOrPresent(message = "Дата рождения не может быть в будущем")
     LocalDate birthday;
 
-    public User(int id, String email, String login, String name, LocalDate birthday) {
+    @NonFinal
+    Set<Integer> friends;
+
+    @NonFinal
+    Set<Integer> likes;
+
+    public User(int id, String email, String login, String name, LocalDate birthday, Set<Integer> friends, Set<Integer> likes) {
         this.id = id;
         this.email = email;
         this.login = login;
         this.name = name;
         this.birthday = birthday;
+        this.friends = friends != null ? friends : new HashSet<>();
+        this.likes = likes != null ? likes : new HashSet<>();
 
         if (name == null || name.isBlank()) {
             this.name = login;
@@ -45,6 +55,5 @@ public class User {
     }
 
     public User() {
-
     }
 }
