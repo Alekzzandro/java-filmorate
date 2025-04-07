@@ -11,7 +11,6 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -59,12 +58,10 @@ public class FilmService {
         log.info("Добавление лайка пользователем {} фильму {}", userId, filmId);
         Film film = getFilmById(filmId);
 
-        // Инициализация множества лайков, если оно null
         if (film.getLikes() == null) {
             film.setLikes(new HashSet<>());
         }
 
-        // Проверка на дублирование лайка
         if (film.getLikes().contains(userId)) {
             log.warn("Пользователь {} уже поставил лайк фильму {}", userId, filmId);
             throw new ValidationException("Пользователь уже поставил лайк этому фильму");
