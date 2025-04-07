@@ -13,20 +13,15 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User addUser(User user) {
-        user = user.toBuilder().id(getNextId()).friends(new HashSet<>()).likes(new HashSet<>()).build();
-        users.put(user.getId(), user);
+        int id = getNextId();
+        user.setId(id);
+        users.put(id, user);
         emailToUserMap.put(user.getEmail(), user);
         return user;
     }
 
     @Override
     public User updateUser(User user) {
-        if (user.getFriends() == null) {
-            user.setFriends(new HashSet<>());
-        }
-        if (user.getLikes() == null) {
-            user.setLikes(new HashSet<>());
-        }
         users.put(user.getId(), user);
         emailToUserMap.put(user.getEmail(), user);
         return user;
@@ -49,5 +44,11 @@ public class InMemoryUserStorage implements UserStorage {
 
     private int getNextId() {
         return nextId++;
+    }
+
+    public void clear() {
+        users.clear();
+        emailToUserMap.clear();
+        nextId = 1;
     }
 }

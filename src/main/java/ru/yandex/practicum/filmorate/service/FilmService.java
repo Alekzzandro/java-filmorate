@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,7 +37,7 @@ public class FilmService {
 
     public Film updateFilm(Film film) throws ValidationException, NotFoundException {
         log.info("Обновление фильма: {}", film);
-        if (film.getId() == 0 || film.getId() <= 0) {
+        if (film.getId() <= 0) {
             log.error("ID фильма не указан или некорректен: {}", film.getId());
             throw new ValidationException("ID фильма должен быть указан и положительным числом");
         }
@@ -54,29 +55,46 @@ public class FilmService {
                 .orElseThrow(() -> new NotFoundException("Фильм с указанным ID не найден"));
     }
 
-    public void addLike(int filmId, int userId) {
+    public void addLike(int filmId, int userId) throws NotFoundException {
         log.info("Добавление лайка пользователем {} фильму {}", userId, filmId);
         Film film = getFilmById(filmId);
+
+        // Инициализация множества лайков, если оно null
         if (film.getLikes() == null) {
             film.setLikes(new HashSet<>());
         }
+
+        // Проверка на дублирование лайка
+        if (film.getLikes().contains(userId)) {
+            log.warn("Пользователь {} уже поставил лайк фильму {}", userId, filmId);
+            throw new ValidationException("Пользователь уже поставил лайк этому фильму");
+        }
+
         film.getLikes().add(userId);
         filmStorage.updateFilm(film);
     }
 
-    public void removeLike(int filmId, int userId) {
+    public void removeLike(int filmId, int userId) throws NotFoundException {
         log.info("Удаление лайка пользователем {} фильму {}", userId, filmId);
         Film film = getFilmById(filmId);
-        if (film.getLikes() != null) {
-            film.getLikes().remove(userId);
+
+        if (film.getLikes() == null || !film.getLikes().contains(userId)) {
+            log.warn("Лайк пользователя {} для фильма {} не найден", userId, filmId);
+            throw new NotFoundException("Лайк пользователя для фильма не найден");
         }
+
+        film.getLikes().remove(userId);
         filmStorage.updateFilm(film);
     }
 
     public List<Film> getPopularFilms(int count) {
         log.info("Запрошены {} самых популярных фильмов", count);
         return filmStorage.getAllFilms().stream()
-                .sorted((f1, f2) -> Integer.compare(f2.getLikes().size(), f1.getLikes().size()))
+                .sorted((f1, f2) -> {
+                    int likes1 = f1.getLikes() != null ? f1.getLikes().size() : 0;
+                    int likes2 = f2.getLikes() != null ? f2.getLikes().size() : 0;
+                    return Integer.compare(likes2, likes1); // Сортировка по убыванию количества лайков
+                })
                 .limit(count)
                 .collect(Collectors.toList());
     }

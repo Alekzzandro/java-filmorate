@@ -40,4 +40,18 @@ public class GlobalExceptionHandler {
     errors.put("error", "Произошла внутренняя ошибка сервера");
     return new ResponseEntity<>(errors, HttpStatus.INTERNAL_SERVER_ERROR);
   }
+
+  @ExceptionHandler(IllegalArgumentException.class)
+  public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException ex) {
+    Map<String, String> errors = new HashMap<>();
+    errors.put("error", ex.getMessage());
+    return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler(DuplicatedDataException.class)
+  public ResponseEntity<Map<String, String>> handleDuplicatedDataException(DuplicatedDataException ex) {
+    Map<String, String> errors = new HashMap<>();
+    errors.put("error", ex.getMessage());
+    return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+  }
 }

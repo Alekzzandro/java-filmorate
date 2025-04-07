@@ -96,7 +96,7 @@ public class FilmServiceTest {
 		Film film = new Film();
 		film.setName("Test Film");
 		film.setDescription("Description of test film");
-		film.setReleaseDate(LocalDate.of(1895, 12, 27)); // дата раньше 28 декабря 1895
+		film.setReleaseDate(LocalDate.of(1895, 12, 27));
 		film.setDuration(120);
 
 		ValidationException exception = assertThrows(ValidationException.class, () -> {

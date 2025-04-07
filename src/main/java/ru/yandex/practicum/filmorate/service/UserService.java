@@ -4,12 +4,12 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-@Validated
 public class UserService {
     private final UserStorage userStorage;
 
@@ -48,6 +47,7 @@ public class UserService {
             existingUser.setLogin(user.getLogin());
         }
         if (user.getBirthday() != null) {
+            validateBirthday(user.getBirthday());
             existingUser.setBirthday(user.getBirthday());
         }
         if (user.getEmail() != null && !user.getEmail().isEmpty() && !user.getEmail().equals(existingUser.getEmail())) {
@@ -76,6 +76,10 @@ public class UserService {
         log.info("Добавление друга {} к пользователю {}", friendId, userId);
         User user = getUserById(userId);
         User friend = getUserById(friendId);
+
+        if (userId == friendId) {
+            throw new IllegalArgumentException("Нельзя добавить самого себя в друзья");
+        }
 
         if (user.getFriends() == null) {
             user.setFriends(new HashSet<>());
@@ -133,5 +137,12 @@ public class UserService {
         return commonFriendsIds.stream()
                 .map(this::getUserById)
                 .collect(Collectors.toList());
+    }
+
+    private void validateBirthday(LocalDate birthday) {
+        if (birthday.isAfter(LocalDate.now())) {
+            log.error("Дата рождения не может быть в будущем: {}", birthday);
+            throw new IllegalArgumentException("Дата рождения не может быть в будущем");
+        }
     }
 }
