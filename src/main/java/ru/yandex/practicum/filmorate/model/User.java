@@ -35,6 +35,8 @@ public class User {
 
     final Set<Long> friends = new HashSet<>();
 
+    FriendshipStatus friendshipStatus = FriendshipStatus.PENDING;
+
     @Builder(toBuilder = true)
     public User(Long id, String email, String login, String name, LocalDate birthday) {
         this.id = id;
