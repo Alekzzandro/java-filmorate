@@ -9,8 +9,8 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 @Service
@@ -35,13 +35,7 @@ public class FilmService {
     }
 
     public Film update(Film film) {
-        Film oldFilm = filmStorage.getFilms().stream()
-                .filter(f -> f.getId().equals(film.getId()))
-                .findFirst()
-                .orElseThrow(() -> {
-                    log.error("Фильм с id {} не найден", film.getId());
-                    return new NotFoundException("Фильм с id " + film.getId() + " не найден");
-                });
+        Film oldFilm = findFilmById(film.getId());
 
         film.getMovieRating().addAll(oldFilm.getMovieRating());
 
@@ -51,8 +45,8 @@ public class FilmService {
     }
 
     public Film findById(Long filmId) {
-        return filmStorage.findById(filmId)
-                .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
+        log.info("Поиск фильма с id {}", filmId);
+        return findFilmById(filmId);
     }
 
     public Collection<Film> getFilms() {
@@ -60,8 +54,7 @@ public class FilmService {
     }
 
     public void addLike(Long filmId, Long userId) {
-        Film film = filmStorage.findById(filmId)
-                .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
+        Film film = findFilmById(filmId);
         User user = userService.findById(userId);
 
         if (film.getMovieRating().contains(userId)) {
@@ -73,8 +66,7 @@ public class FilmService {
     }
 
     public void deleteLike(Long filmId, Long userId) {
-        Film film = filmStorage.findById(filmId)
-                .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
+        Film film = findFilmById(filmId);
         User user = userService.findById(userId);
 
         film.getMovieRating().remove(userId);
@@ -82,16 +74,17 @@ public class FilmService {
     }
 
     public List<Film> getTopFilms(int count) {
-        return filmStorage.getFilms().stream()
-                .sorted(Comparator.comparingInt((Film film) -> film.getMovieRating().size()).reversed())
-                .limit(count)
-                .toList();
+        return filmStorage.getTopFilms(count);
     }
 
+    private Film findFilmById(Long filmId) {
+        return filmStorage.findById(filmId)
+                .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
+    }
+
+    private final AtomicLong idGenerator = new AtomicLong(0);
+
     private long getNextId() {
-        return filmStorage.getFilms().stream()
-                .mapToLong(Film::getId)
-                .max()
-                .orElse(0) + 1;
+        return idGenerator.incrementAndGet();
     }
 }

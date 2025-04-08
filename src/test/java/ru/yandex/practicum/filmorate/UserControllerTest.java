@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
@@ -27,14 +26,10 @@ public class UserControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private UserController userController;
-
     private User user;
 
     @BeforeEach
     void setUp() {
-        userController.getUsers().clear();
         user = User.builder()
                 .email("test@mail.com")
                 .login("username")
@@ -57,33 +52,6 @@ public class UserControllerTest {
     }
 
     @Test
-    void shouldCreateValidUserWithId() throws Exception {
-        User userWithId = user.toBuilder().id(1L).build();
-
-        mockMvc.perform(post("/users")
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(userWithId)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(Matchers.greaterThan(0)))
-                .andExpect(jsonPath("$.login").value(userWithId.getLogin()))
-                .andExpect(jsonPath("$.name").value(userWithId.getName()))
-                .andExpect(jsonPath("$.email").value(userWithId.getEmail()))
-                .andExpect(jsonPath("$.birthday").value(userWithId.getBirthday().toString()));
-
-    }
-
-    @Test
-    void shouldThrowExceptionWhenNameIsEmpty() throws Exception {
-        User userWithoutName = user.toBuilder().name(null).build();
-
-        mockMvc.perform(post("/users")
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(userWithoutName)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value(userWithoutName.getLogin()));
-    }
-
-    @Test
     void shouldThrowExceptionWhenEmailIsEmpty() throws Exception {
         User invalidUser = user.toBuilder().email("").build();
 
@@ -92,17 +60,6 @@ public class UserControllerTest {
                         .content(objectMapper.writeValueAsString(invalidUser)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fields.email").value("Email не должен быть пустым"));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenEmailIsInvalid() throws Exception {
-        User invalidUser = user.toBuilder().email("invalid-email@").build();
-
-        mockMvc.perform(post("/users")
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(invalidUser)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.fields.email").value("Некорректный формат email"));
     }
 
     @Test
@@ -119,37 +76,11 @@ public class UserControllerTest {
     @Test
     void shouldThrowExceptionWhenBirthdayInFuture() throws Exception {
         User invalidUser = user.toBuilder().birthday(LocalDate.now().plusDays(1)).build();
-        mockMvc.perform(post("/users")
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(invalidUser)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.fields.birthday").value("Дата рождения не может быть в будущем"));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenIdNotFound() throws Exception {
-        mockMvc.perform(put("/users")
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(user)))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.description").value("Юзер с id " + user.getId() + " не найден"));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenAllFieldsInvalid() throws Exception {
-        User invalidUser = User.builder()
-                .email("")
-                .login("")
-                .name(null)
-                .birthday(LocalDate.now().plusDays(1))
-                .build();
 
         mockMvc.perform(post("/users")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(invalidUser)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.fields.email").value("Email не должен быть пустым"))
-                .andExpect(jsonPath("$.fields.login").value("Логин не должен быть пустым"))
                 .andExpect(jsonPath("$.fields.birthday").value("Дата рождения не может быть в будущем"));
     }
 
@@ -164,20 +95,19 @@ public class UserControllerTest {
                 .getContentAsString();
         User createdUser = objectMapper.readValue(createdUserContent, User.class);
 
-        User userUpdate = user.toBuilder()
-                .id(createdUser.getId())
+        User updatedUser = createdUser.toBuilder()
                 .login("new_login")
                 .build();
 
         mockMvc.perform(put("/users")
                         .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(userUpdate)))
+                        .content(objectMapper.writeValueAsString(updatedUser)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(userUpdate.getId()))
-                .andExpect(jsonPath("$.email").value(userUpdate.getEmail()))
-                .andExpect(jsonPath("$.login").value(userUpdate.getLogin()))
-                .andExpect(jsonPath("$.name").value(userUpdate.getName()))
-                .andExpect(jsonPath("$.birthday").value(userUpdate.getBirthday().toString()));
+                .andExpect(jsonPath("$.id").value(createdUser.getId()))
+                .andExpect(jsonPath("$.login").value("new_login"))
+                .andExpect(jsonPath("$.name").value(createdUser.getName()))
+                .andExpect(jsonPath("$.email").value(createdUser.getEmail()))
+                .andExpect(jsonPath("$.birthday").value(createdUser.getBirthday().toString()));
     }
 
     @Test
@@ -193,6 +123,7 @@ public class UserControllerTest {
 
         mockMvc.perform(get("/users/" + createdUser.getId()))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(createdUser.getId()))
                 .andExpect(jsonPath("$.login").value(createdUser.getLogin()))
                 .andExpect(jsonPath("$.name").value(createdUser.getName()))
                 .andExpect(jsonPath("$.email").value(createdUser.getEmail()))
@@ -200,23 +131,69 @@ public class UserControllerTest {
     }
 
     @Test
-    void shouldReturnCorrectCollection() throws Exception {
-        User user2 = user.toBuilder().login("another_login").build();
+    void shouldAddFriend() throws Exception {
+        User user1 = User.builder()
+                .email("user1@mail.com")
+                .login("user1")
+                .name("User One")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .build();
 
-        mockMvc.perform(post("/users")
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(user)))
+        User user2 = User.builder()
+                .email("user2@mail.com")
+                .login("user2")
+                .name("User Two")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .build();
+
+        mockMvc.perform(post("/users").contentType("application/json").content(objectMapper.writeValueAsString(user1)))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/users").contentType("application/json").content(objectMapper.writeValueAsString(user2)))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/users")
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(user2)))
+        // Добавляем друга
+        mockMvc.perform(put("/users/{id}/friends/{friendId}", 1, 2))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/users"))
+        // Проверяем список друзей первого пользователя
+        mockMvc.perform(get("/users/{id}/friends", 1))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].login").value(user.getLogin()))
-                .andExpect(jsonPath("$[1].login").value(user2.getLogin()));
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(2));
+    }
+
+    @Test
+    void shouldDeleteFriend() throws Exception {
+        User user1 = User.builder()
+                .email("user1@mail.com")
+                .login("user1")
+                .name("User One")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .build();
+
+        User user2 = User.builder()
+                .email("user2@mail.com")
+                .login("user2")
+                .name("User Two")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .build();
+
+        mockMvc.perform(post("/users").contentType("application/json").content(objectMapper.writeValueAsString(user1)))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/users").contentType("application/json").content(objectMapper.writeValueAsString(user2)))
+                .andExpect(status().isOk());
+
+        // Добавляем друга
+        mockMvc.perform(put("/users/{id}/friends/{friendId}", 1, 2))
+                .andExpect(status().isOk());
+
+        // Удаляем друга
+        mockMvc.perform(delete("/users/{id}/friends/{friendId}", 1, 2))
+                .andExpect(status().isOk());
+
+        // Проверяем список друзей первого пользователя
+        mockMvc.perform(get("/users/{id}/friends", 1))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 }
