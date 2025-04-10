@@ -1,6 +1,6 @@
 # Filmorate Database Schema
 
-![ER-Diagram]([https://example.com/er-diagram.png](https://dbdiagram.io/d/67f812dd4f7afba18426b08e)) <!-- Замените на реальный URL диаграммы -->
+![ER-Diagram]([untitled.png))
 
 ## Оглавление
 
