@@ -106,9 +106,8 @@ FROM film f
 LEFT JOIN user_like l ON f.film_id = l.film_id
 GROUP BY f.film_id, f.name
 ORDER BY likes_count DESC
-LIMIT 10; ```
-
-
+LIMIT 10;
+```
 #### 2. Получить все друзья пользователя с ID = 1
 ```sql
 SELECT u.user_id, u.login, u.name
