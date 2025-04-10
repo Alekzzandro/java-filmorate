@@ -108,6 +108,7 @@ GROUP BY f.film_id, f.name
 ORDER BY likes_count DESC
 LIMIT 10; ```
 
+
 #### 2. Получить все друзья пользователя с ID = 1
 ```sql
 SELECT u.user_id, u.login, u.name
