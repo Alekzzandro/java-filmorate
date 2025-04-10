@@ -115,4 +115,26 @@ FROM friends fr
 JOIN user u ON fr.friend_id = u.user_id
 WHERE fr.user_id = 1 AND fr.status_id = (
     SELECT status_id FROM friendship_status WHERE name = 'CONFIRMED'
-); ```
+);
+```
+#### 3. Получить общих друзей двух пользователей с ID = 1 и ID = 2
+```sql
+SELECT u.user_id, u.login, u.name
+FROM friends f1
+JOIN friends f2 ON f1.friend_id = f2.friend_id
+JOIN user u ON f1.friend_id = u.user_id
+WHERE f1.user_id = 1 AND f2.user_id = 2;
+```
+#### 4. Получить все жанры фильма с ID = 5
+```sql
+SELECT g.genre_id, g.name AS genre_name
+FROM film_genre fg
+JOIN genre g ON fg.genre_id = g.genre_id
+WHERE fg.film_id = 5;
+```
+#### 5. Получить всех пользователей с возрастом больше 18 лет
+```sql
+SELECT u.user_id, u.login, u.name
+FROM user u
+WHERE EXTRACT(YEAR FROM AGE(u.birthday)) > 18;
+```
