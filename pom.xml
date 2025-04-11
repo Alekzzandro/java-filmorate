@@ -60,6 +60,12 @@
 			<version>5.7.0</version>
 			<scope>test</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>org.zalando</groupId>
+			<artifactId>logbook-spring-boot-starter</artifactId>
+			<version>3.7.2</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -69,6 +75,15 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
 					<mainClass>ru.yandex.practicum.filmorate.FilmorateApplication</mainClass>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.0.0</version>
+				<configuration>
+					<argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-inline/${mockito.version}/mockito-inline-${mockito.version}.jar</argLine>
 				</configuration>
 			</plugin>
 

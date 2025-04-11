@@ -1,120 +1,150 @@
 package ru.yandex.practicum.filmorate;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import org.springframework.test.web.servlet.MockMvc;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.model.FilmGenre;
+import ru.yandex.practicum.filmorate.model.MpaRating;
 
 import java.time.LocalDate;
+import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.hasItem;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = FilmorateApplication.class)
-public class FilmServiceTest {
-	private FilmService filmService;
+@SpringBootTest
+@AutoConfigureMockMvc
+class FilmServiceTest {
+
+	@Autowired
+	private MockMvc mockMvc;
+
+	@Autowired
+	private ObjectMapper objectMapper;
+
+	private Film film;
 
 	@BeforeEach
-	public void setUp() {
-		filmService = new FilmService();
+	void setUp() {
+		film = Film.builder()
+				.name("Interstellar")
+				.description("Great movie")
+				.releaseDate(LocalDate.of(2014, 11, 7))
+				.duration(169)
+				.genres(Collections.singleton(FilmGenre.DRAMA))
+				.mpaRating(MpaRating.PG_13)
+				.build();
 	}
 
 	@Test
-	public void testAddFilm() throws ValidationException {
-		Film film = new Film();
-		film.setName("Test Film");
-		film.setDescription("Description of test film");
-		film.setReleaseDate(LocalDate.of(2023, 1, 1));
-		film.setDuration(120);
-
-		Film addedFilm = filmService.addFilm(film);
-
-		assertNotNull(addedFilm, "Фильм не добавлен");
-		assertEquals(film.getName(), addedFilm.getName(), "Название фильма не совпадает");
-		assertEquals(film.getDescription(), addedFilm.getDescription(), "Описание фильма не совпадает");
-		assertEquals(film.getReleaseDate(), addedFilm.getReleaseDate(), "Дата релиза фильма не совпадает");
-		assertEquals(film.getDuration(), addedFilm.getDuration(), "Продолжительность фильма не совпадает");
+	void shouldCreateValidFilm() throws Exception {
+		mockMvc.perform(post("/films")
+						.contentType("application/json")
+						.content(objectMapper.writeValueAsString(film)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.id").value(Matchers.greaterThan(0)))
+				.andExpect(jsonPath("$.name").value(film.getName()))
+				.andExpect(jsonPath("$.description").value(film.getDescription()))
+				.andExpect(jsonPath("$.releaseDate").value(film.getReleaseDate().toString()))
+				.andExpect(jsonPath("$.genres", hasItem("DRAMA")))
+				.andExpect(jsonPath("$.mpaRating").value(film.getMpaRating().toString()));
 	}
 
 	@Test
-	public void testAddFilmEmptyName() {
-		Film film = new Film();
-		film.setName("");
-		film.setDescription("Description of test film");
-		film.setReleaseDate(LocalDate.of(2023, 1, 1));
-		film.setDuration(120);
+	void shouldThrowExceptionWhenNameIsEmpty() throws Exception {
+		Film invalidFilm = film.toBuilder().name("").build();
 
-		ValidationException exception = assertThrows(ValidationException.class, () -> {
-			filmService.addFilm(film);
-		});
-
-		assertEquals("Название фильма не может быть пустым", exception.getMessage());
+		mockMvc.perform(post("/films")
+						.contentType("application/json")
+						.content(objectMapper.writeValueAsString(invalidFilm)))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.fields.name").value("Название не должно быть пустым"));
 	}
 
 	@Test
-	public void testAddFilmLongDescription() {
-		Film film = new Film();
-		film.setName("Test Film");
-		film.setDescription("a".repeat(201));
-		film.setReleaseDate(LocalDate.of(2023, 1, 1));
-		film.setDuration(120);
+	void shouldThrowExceptionWhenDescriptionTooLong() throws Exception {
+		Film invalidFilm = film.toBuilder().description("A".repeat(201)).build();
 
-		ValidationException exception = assertThrows(ValidationException.class, () -> {
-			filmService.addFilm(film);
-		});
-
-		assertEquals("Максимальная длина описания — 200 символов", exception.getMessage());
+		mockMvc.perform(post("/films")
+						.contentType("application/json")
+						.content(objectMapper.writeValueAsString(invalidFilm)))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.fields.description").value("Максимальная длина описания — 200 символов"));
 	}
 
 	@Test
-	public void testAddFilmInvalidReleaseDate() {
-		Film film = new Film();
-		film.setName("Test Film");
-		film.setDescription("Description of test film");
-		film.setReleaseDate(LocalDate.of(1895, 12, 27)); // дата раньше 28 декабря 1895
-		film.setDuration(120);
+	void shouldThrowExceptionWhenReleaseDateIsTooEarly() throws Exception {
+		Film invalidFilm = film.toBuilder().releaseDate(LocalDate.of(1800, 1, 1)).build();
 
-		ValidationException exception = assertThrows(ValidationException.class, () -> {
-			filmService.addFilm(film);
-		});
-
-		assertEquals("Дата релиза — не раньше 28 декабря 1895 года", exception.getMessage());
+		mockMvc.perform(post("/films")
+						.contentType("application/json")
+						.content(objectMapper.writeValueAsString(invalidFilm)))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.fields.releaseDate").value("Дата релиза не должна быть раньше 28 декабря 1895 года"));
 	}
 
 	@Test
-	public void testAddFilmNegativeDuration() {
-		Film film = new Film();
-		film.setName("Test Film");
-		film.setDescription("Description of test film");
-		film.setReleaseDate(LocalDate.of(2023, 1, 1));
-		film.setDuration(-10);
+	void shouldThrowExceptionWhenDurationIsZero() throws Exception {
+		Film invalidFilm = film.toBuilder().duration(0).build();
 
-		ValidationException exception = assertThrows(ValidationException.class, () -> {
-			filmService.addFilm(film);
-		});
-
-		assertEquals("Продолжительность фильма должна быть положительным числом", exception.getMessage());
+		mockMvc.perform(post("/films")
+						.contentType("application/json")
+						.content(objectMapper.writeValueAsString(invalidFilm)))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.fields.duration").value("Продолжительность фильма должна быть положительным числом"));
 	}
 
 	@Test
-	public void testUpdateFilm() throws ValidationException {
-		Film film = new Film();
-		film.setName("Test Film");
-		film.setDescription("Description of test film");
-		film.setReleaseDate(LocalDate.of(2023, 1, 1));
-		film.setDuration(120);
-		filmService.addFilm(film);
+	void shouldUpdateValidFilm() throws Exception {
+		String createdFilmContent = mockMvc.perform(post("/films")
+						.contentType("application/json")
+						.content(objectMapper.writeValueAsString(film)))
+				.andExpect(status().isOk())
+				.andReturn()
+				.getResponse()
+				.getContentAsString();
+		Film createdFilm = objectMapper.readValue(createdFilmContent, Film.class);
 
-		film.setName("Updated Film");
-		film.setDuration(150);
+		Film updatedFilm = createdFilm.toBuilder()
+				.name("Updated Name")
+				.build();
 
-		Film updatedFilm = filmService.updateFilm(film);
+		mockMvc.perform(put("/films")
+						.contentType("application/json")
+						.content(objectMapper.writeValueAsString(updatedFilm)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.id").value(createdFilm.getId()))
+				.andExpect(jsonPath("$.name").value("Updated Name"))
+				.andExpect(jsonPath("$.description").value(createdFilm.getDescription()))
+				.andExpect(jsonPath("$.releaseDate").value(createdFilm.getReleaseDate().toString()))
+				.andExpect(jsonPath("$.duration").value(createdFilm.getDuration()));
+	}
 
-		assertNotNull(updatedFilm, "Фильм не обновлен");
-		assertEquals(film.getName(), updatedFilm.getName(), "Название фильма не совпадает");
-		assertEquals(film.getDescription(), updatedFilm.getDescription(), "Описание фильма не совпадает");
-		assertEquals(film.getReleaseDate(), updatedFilm.getReleaseDate(), "Дата релиза фильма не совпадает");
-		assertEquals(film.getDuration(), updatedFilm.getDuration(), "Продолжительность фильма не совпадает");
+	@Test
+	void shouldReturnCorrectFilm() throws Exception {
+		String createdFilmContent = mockMvc.perform(post("/films")
+						.contentType("application/json")
+						.content(objectMapper.writeValueAsString(film)))
+				.andExpect(status().isOk())
+				.andReturn()
+				.getResponse()
+				.getContentAsString();
+		Film createdFilm = objectMapper.readValue(createdFilmContent, Film.class);
+
+		mockMvc.perform(get("/films/" + createdFilm.getId()))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.id").value(createdFilm.getId()))
+				.andExpect(jsonPath("$.name").value(createdFilm.getName()))
+				.andExpect(jsonPath("$.description").value(createdFilm.getDescription()))
+				.andExpect(jsonPath("$.releaseDate").value(createdFilm.getReleaseDate().toString()))
+				.andExpect(jsonPath("$.duration").value(createdFilm.getDuration()));
 	}
 }
