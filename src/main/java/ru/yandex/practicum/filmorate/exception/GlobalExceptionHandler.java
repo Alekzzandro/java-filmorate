@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
 
     // Обработка пользовательских исключений валидации.
     @ExceptionHandler(ValidationException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleCustomValidationException(ValidationException e) {
         return new ErrorResponse("Ошибка валидации", e.getMessage());
     }
@@ -56,7 +56,7 @@ public class GlobalExceptionHandler {
 
     // Обработка MpaNotFoundException
     @ExceptionHandler(MpaNotFoundException.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMpaNotFoundException(MpaNotFoundException ex) {
         return new ErrorResponse("Ошибка валидации", ex.getMessage());
     }
