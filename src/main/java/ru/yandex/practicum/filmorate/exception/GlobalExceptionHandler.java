@@ -56,7 +56,7 @@ public class GlobalExceptionHandler {
 
     // Обработка MpaNotFoundException
     @ExceptionHandler(MpaNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleMpaNotFoundException(MpaNotFoundException ex) {
         return new ErrorResponse("Ошибка валидации", ex.getMessage());
     }
