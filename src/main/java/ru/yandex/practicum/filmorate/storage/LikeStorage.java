@@ -59,7 +59,7 @@ public class LikeStorage {
             );
         }, count);
 
-        return films; // Возвращаем пустой список вместо выброса исключения
+        return films;
     }
 
     public List<Long> getLikes(Long filmId) {

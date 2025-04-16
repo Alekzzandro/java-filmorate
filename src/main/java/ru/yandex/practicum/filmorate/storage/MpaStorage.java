@@ -40,7 +40,7 @@ public class MpaStorage {
                     mpaRows.getString("description")
             );
         } else {
-            return null; // Возвращаем null, чтобы вызывающий код мог обработать это самостоятельно
+            return null;
         }
     }
 }

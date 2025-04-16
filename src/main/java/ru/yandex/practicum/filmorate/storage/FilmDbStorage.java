@@ -66,41 +66,35 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film create(Film film) {
 
-        // Проверяем дату релиза перед сохранением
         if (!FilmService.isReleaseDateValid(film.getReleaseDate())) {
             throw new InvalidReleaseDateException(
                     "Дата релиза должна быть не раньше 28 декабря 1895 года."
             );
         }
 
-        // Проверяем, что MPA_RATING_ID не равен NULL
         if (film.getMpa() == null || film.getMpa().getId() == null) {
             throw new MpaNotFoundException("MPA rating is required");
         }
 
-        // Проверяем, что MPA с указанным ID существует
         Mpa mpa = mpaService.getMpaById(film.getMpa().getId());
         if (mpa == null) {
             throw new MpaNotFoundException("Рейтинг с ID=" + film.getMpa().getId() + " не найден!");
         }
 
-        // Вставка фильма в таблицу "films" и получение сгенерированного ID
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName("films")
                 .usingGeneratedKeyColumns("id");
         Number generatedId = simpleJdbcInsert.executeAndReturnKey(film.toMap());
         film.setId(generatedId.longValue());
 
-        // Установка MPA
         try {
             film.setMpa(mpaService.getMpaById(film.getMpa().getId()));
         } catch (MpaNotFoundException e) {
-            throw e; // Перебрасываем исключение, чтобы оно обработалось GlobalExceptionHandler
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Ошибка при получении MPA: " + e.getMessage(), e);
         }
 
-        // Обработка жанров
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             for (Genre genre : film.getGenres()) {
                 try {
@@ -109,7 +103,7 @@ public class FilmDbStorage implements FilmStorage {
                     throw new RuntimeException("Ошибка при получении жанра: " + e.getMessage(), e);
                 }
             }
-            genreService.putGenres(film); // Сохранение связей между фильмом и жанрами
+            genreService.putGenres(film);
         }
 
         return film;

@@ -23,7 +23,6 @@ public class GlobalExceptionHandler {
         return new ErrorResponse("Фильм не найден", e.getMessage());
     }
 
-    // Обработка ошибок валидации (например, @NotBlank, @Email, @Past).
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidationException(MethodArgumentNotValidException e) {
@@ -33,35 +32,30 @@ public class GlobalExceptionHandler {
         return new ErrorResponse("Ошибка валидации", errorMessage);
     }
 
-    // Обработка пользовательских исключений валидации.
     @ExceptionHandler(ValidationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleCustomValidationException(ValidationException e) {
         return new ErrorResponse("Ошибка валидации", e.getMessage());
     }
 
-    // Обработка ошибок, связанных с отсутствием объекта (например, IllegalArgumentException).
     @ExceptionHandler(UserNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleUserNotFoundException(UserNotFoundException e) {
         return new ErrorResponse("Пользователь не найден", e.getMessage());
     }
 
-    // Обработка InvalidReleaseDateException
     @ExceptionHandler(InvalidReleaseDateException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleInvalidReleaseDateException(InvalidReleaseDateException ex) {
         return new ErrorResponse("Ошибка валидации", ex.getMessage());
     }
 
-    // Обработка MpaNotFoundException
     @ExceptionHandler(MpaNotFoundException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMpaNotFoundException(MpaNotFoundException ex) {
         return new ErrorResponse("Ошибка валидации", ex.getMessage());
     }
 
-    // Обработка всех остальных исключений.
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleOtherExceptions(Exception e) {
