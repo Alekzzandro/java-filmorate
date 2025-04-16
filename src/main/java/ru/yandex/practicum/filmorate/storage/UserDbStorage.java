@@ -13,7 +13,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.util.List;
 
 @Slf4j
-@Component(value ="userDbStorage")
+@Component(value = "userDbStorage")
 public class UserDbStorage implements UserStorage {
 
     private final JdbcTemplate jdbcTemplate;

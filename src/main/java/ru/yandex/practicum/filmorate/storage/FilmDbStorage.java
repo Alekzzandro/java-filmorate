@@ -16,7 +16,6 @@ import ru.yandex.practicum.filmorate.service.MpaService;
 import java.util.*;
 import java.util.stream.Collectors;
 
-
 @Component("filmDbStorage")
 public class FilmDbStorage implements FilmStorage {
 
@@ -25,11 +24,9 @@ public class FilmDbStorage implements FilmStorage {
     private final GenreService genreService;
     private final LikeStorage likeStorage;
 
-
-
     @Autowired
     public FilmDbStorage(JdbcTemplate jdbcTemplate, MpaService mpaService, GenreService genreService,
-                         LikeStorage likeStorage ) {
+                         LikeStorage likeStorage) {
         this.jdbcTemplate = jdbcTemplate;
         this.mpaService = mpaService;
         this.genreService = genreService;

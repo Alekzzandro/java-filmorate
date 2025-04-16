@@ -7,9 +7,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class FilmorateApplication {
-	private static final Logger log = LoggerFactory.getLogger(FilmorateApplication.class);
+    private static final Logger log = LoggerFactory.getLogger(FilmorateApplication.class);
 
-	public static void main(String[] args) {
-		SpringApplication.run(FilmorateApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(FilmorateApplication.class, args);
+    }
 }
