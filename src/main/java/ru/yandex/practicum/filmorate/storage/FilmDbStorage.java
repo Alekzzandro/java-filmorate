@@ -78,6 +78,12 @@ public class FilmDbStorage implements FilmStorage {
             throw new MpaNotFoundException("MPA rating is required");
         }
 
+        // Проверяем, что MPA с указанным ID существует
+        Mpa mpa = mpaService.getMpaById(film.getMpa().getId());
+        if (mpa == null) {
+            throw new MpaNotFoundException("Рейтинг с ID=" + film.getMpa().getId() + " не найден!");
+        }
+
         // Вставка фильма в таблицу "films" и получение сгенерированного ID
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName("films")

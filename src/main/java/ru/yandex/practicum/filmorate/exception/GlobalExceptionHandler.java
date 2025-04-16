@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
 
     // Обработка пользовательских исключений валидации.
     @ExceptionHandler(ValidationException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleCustomValidationException(ValidationException e) {
         return new ErrorResponse("Ошибка валидации", e.getMessage());
     }
