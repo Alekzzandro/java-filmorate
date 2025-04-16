@@ -74,7 +74,7 @@ public class FilmDbStorage implements FilmStorage {
 
         // Проверяем, что MPA_RATING_ID не равен NULL
         if (film.getMpa() == null || film.getMpa().getId() == null) {
-            throw new InvalidReleaseDateException("MPA rating is required");
+            throw new MpaNotFoundException("MPA rating is required");
         }
 
         // Вставка фильма в таблицу "films" и получение сгенерированного ID
