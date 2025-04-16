@@ -1,6 +1,6 @@
 # Filmorate Database Schema
 
-![ER-Diagram](src/Untitled (1).png)
+![ER-Diagram](Diagram.png)
 
 ## Оглавление
 
