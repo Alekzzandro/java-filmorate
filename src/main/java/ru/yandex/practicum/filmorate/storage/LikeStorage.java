@@ -6,17 +6,12 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.MpaNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.service.GenreService;
 import ru.yandex.practicum.filmorate.service.MpaService;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.AbstractMap;
-import java.util.stream.Collectors;
+
 
 @Component
 public class LikeStorage {
@@ -42,10 +37,9 @@ public class LikeStorage {
     }
 
     public List<Film> getPopular(Long count) {
-        // Получаем популярные фильмы с количеством лайков
-        String getPopularQuery = "SELECT f.id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id " +
-                "FROM films f LEFT JOIN likes l ON f.id = l.film_id " +
-                "GROUP BY f.id ORDER BY COUNT(l.user_id) DESC LIMIT ?";
+        String getPopularQuery = "SELECT id, name, description, release_date, duration, mpa_rating_id " +
+                "FROM films LEFT JOIN likes ON films.id = likes.film_id " +
+                "GROUP BY films.id ORDER BY COUNT(likes.user_id) DESC LIMIT ?";
 
         List<Film> films = jdbcTemplate.query(getPopularQuery, (rs, rowNum) -> {
             Long filmId = rs.getLong("id");
@@ -59,73 +53,17 @@ public class LikeStorage {
                     rs.getString("description"),
                     rs.getDate("release_date").toLocalDate(),
                     rs.getInt("duration"),
-                    new HashSet<>(),
+                    new HashSet<>(getLikes(filmId)),
                     mpa,
-                    null
+                    genreService.getFilmGenres(filmId)
             );
         }, count);
-
-        // Получаем все лайки для этих фильмов
-        Map<Long, Set<Long>> filmLikesMap = getFilmLikesMap(films);
-
-        // Получаем все жанры для этих фильмов
-        Map<Long, Set<Genre>> filmGenresMap = getFilmGenresMap(films);
-
-        // Добавляем лайки и жанры к фильмам
-        for (Film film : films) {
-            film.setLikes(filmLikesMap.getOrDefault(film.getId(), new HashSet<>()));
-            film.setGenres(filmGenresMap.getOrDefault(film.getId(), new HashSet<>()));
-        }
 
         return films;
     }
 
-    private Map<Long, Set<Long>> getFilmLikesMap(List<Film> films) {
-        if (films.isEmpty()) {
-            return new HashMap<>();
-        }
-
-        String sql = "SELECT film_id, user_id FROM likes WHERE film_id IN ("
-                + films.stream().map(film -> "?").collect(Collectors.joining(", ")) + ")";
-
-        List<Object> filmIds = films.stream().map(Film::getId).collect(Collectors.toList());
-
-        return jdbcTemplate.query(sql, filmIds.toArray(), (rs, rowNum) -> {
-            Long filmId = rs.getLong("film_id");
-            Long userId = rs.getLong("user_id");
-            return new AbstractMap.SimpleEntry<>(filmId, userId);
-        }).stream().collect(Collectors.groupingBy(
-                Map.Entry::getKey,
-                Collectors.mapping(Map.Entry::getValue, Collectors.toSet())
-        ));
-    }
-
-    private Map<Long, Set<Genre>> getFilmGenresMap(List<Film> films) {
-        if (films.isEmpty()) {
-            return new HashMap<>();
-        }
-
-        String sql = "SELECT fg.film_id, g.id, g.name FROM film_genres fg " +
-                "JOIN genres g ON fg.genre_id = g.id " +
-                "WHERE fg.film_id IN ("
-                + films.stream().map(film -> "?").collect(Collectors.joining(", ")) + ")";
-
-        List<Object> filmIds = films.stream().map(Film::getId).collect(Collectors.toList());
-
-        return jdbcTemplate.query(sql, filmIds.toArray(), (rs, rowNum) -> {
-            Long filmId = rs.getLong("film_id");
-            Genre genre = new Genre(rs.getLong("id"), rs.getString("name"));
-            return new AbstractMap.SimpleEntry<>(filmId, genre);
-        }).stream().collect(Collectors.groupingBy(
-                Map.Entry::getKey,
-                Collectors.mapping(Map.Entry::getValue, Collectors.toSet())
-        ));
-    }
-
-    public Set<Long> getLikes(Long filmId) {
+    public List<Long> getLikes(Long filmId) {
         String sql = "SELECT user_id FROM likes WHERE film_id = ?";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> rs.getLong("user_id"), filmId)
-                .stream()
-                .collect(Collectors.toSet());
+        return jdbcTemplate.query(sql, (rs, rowNum) -> rs.getLong("user_id"), filmId);
     }
 }
