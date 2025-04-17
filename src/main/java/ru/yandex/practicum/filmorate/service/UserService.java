@@ -15,8 +15,8 @@ import java.util.Set;
 
 @Service
 public class UserService {
-    private UserStorage userStorage;
-    private FriendStorage friendStorage;
+    private final UserStorage userStorage;
+    private final FriendStorage friendStorage;
 
     @Autowired
     public UserService(@Qualifier("userDbStorage") UserStorage userStorage, FriendStorage friendStorage) {
@@ -24,6 +24,28 @@ public class UserService {
         this.friendStorage = friendStorage;
     }
 
+    // Методы для работы с пользователями
+    public List<User> getUsers() {
+        return userStorage.getUsers();
+    }
+
+    public User getUserById(Long userId) {
+        return userStorage.getUserById(userId);
+    }
+
+    public User create(User user) {
+        return userStorage.create(user);
+    }
+
+    public User update(User user) {
+        return userStorage.update(user);
+    }
+
+    public User delete(Long userId) {
+        return userStorage.delete(userId);
+    }
+
+    // Методы для работы с друзьями
     public void addFriend(Long userId, Long friendId) {
         if (userId == friendId) {
             throw new ValidationException("Нельзя добавить самого себя в друзья!");
@@ -47,15 +69,17 @@ public class UserService {
     }
 
     public List<User> getCommonFriends(Long firstUserId, Long secondUserId) {
-
         User firstUser = userStorage.getUserById(firstUserId);
         User secondUser = userStorage.getUserById(secondUserId);
-        Set<User> intersection = null;
+        Set<User> intersection = new HashSet<>();
 
         if ((firstUser != null) && (secondUser != null)) {
-            intersection = new HashSet<>(friendStorage.getFriends(firstUserId));
-            intersection.retainAll(friendStorage.getFriends(secondUserId));
+            List<User> firstUserFriends = friendStorage.getFriends(firstUserId);
+            List<User> secondUserFriends = friendStorage.getFriends(secondUserId);
+
+            intersection = new HashSet<>(firstUserFriends);
+            intersection.retainAll(secondUserFriends);
         }
-        return new ArrayList<User>(intersection);
+        return new ArrayList<>(intersection);
     }
 }

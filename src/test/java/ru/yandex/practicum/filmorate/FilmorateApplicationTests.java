@@ -75,9 +75,9 @@
 //                .releaseDate(LocalDate.of(1961, 10, 5))
 //                .duration(114)
 //                .build();
-//        firstFilm.setMpa(new Mpa(1, "G"));
+//        firstFilm.setMpa(new Mpa(1, "G", "Best"));
 //        firstFilm.setLikes(new HashSet<>());
-//        firstFilm.setGenres(new HashSet<>(Arrays.asList(new Genre(2, "Драма"),
+//        firstFilm.setGenres(new HashSet<>(Arrays.asList(new Genre(1, "Драма"),
 //                new Genre(1, "Комедия"))));
 //
 //        secondFilm = Film.builder()
@@ -87,7 +87,7 @@
 //                .releaseDate(LocalDate.of(2009, 12, 10))
 //                .duration(162)
 //                .build();
-//        secondFilm.setMpa(new Mpa(3, "PG-13"));
+//        secondFilm.setMpa(new Mpa(3, "PG-13", "Best"));
 //        secondFilm.setLikes(new HashSet<>());
 //        secondFilm.setGenres(new HashSet<>(Arrays.asList(new Genre(6, "Боевик"))));
 //
@@ -98,7 +98,7 @@
 //                .releaseDate(LocalDate.of(1975, 11, 19))
 //                .duration(133)
 //                .build();
-//        thirdFilm.setMpa(new Mpa(4, "R"));
+//        thirdFilm.setMpa(new Mpa(4, "R", "Best"));
 //        thirdFilm.setLikes(new HashSet<>());
 //        thirdFilm.setGenres(new HashSet<>(Arrays.asList(new Genre(2, "Драма"))));
 //    }
@@ -171,26 +171,6 @@
 //    }
 //
 //    @Test
-//    public void testUpdateFilm() {
-//        firstFilm = filmStorage.create(firstFilm);
-//        Film updateFilm = Film.builder()
-//                .id(firstFilm.getId())
-//                .name("UpdateName")
-//                .description("UpdateDescription")
-//                .releaseDate(LocalDate.of(1975, 11, 19))
-//                .duration(133)
-//                .build();
-//        updateFilm.setMpa(new Mpa(1, "G"));
-//        Optional<Film> testUpdateFilm = Optional.ofNullable(filmStorage.update(updateFilm));
-//        assertThat(testUpdateFilm)
-//                .hasValueSatisfying(film ->
-//                        assertThat(film)
-//                                .hasFieldOrPropertyWithValue("name", "UpdateName")
-//                                .hasFieldOrPropertyWithValue("description", "UpdateDescription")
-//                );
-//    }
-//
-//    @Test
 //    public void deleteFilm() {
 //        firstFilm = filmStorage.create(firstFilm);
 //        secondFilm = filmStorage.create(secondFilm);
@@ -224,45 +204,6 @@
 //        firstFilm = filmStorage.getFilmById(firstFilm.getId());
 //        assertThat(firstFilm.getLikes()).hasSize(1);
 //        assertThat(firstFilm.getLikes()).contains(secondUser.getId());
-//    }
-//
-//    @Test
-//    public void testGetPopularFilms() {
-//
-//        firstUser = userStorage.create(firstUser);
-//        secondUser = userStorage.create(secondUser);
-//        thirdUser = userStorage.create(thirdUser);
-//
-//        firstFilm = filmStorage.create(firstFilm);
-//        filmService.addLike(firstFilm.getId(), firstUser.getId());
-//
-//        secondFilm = filmStorage.create(secondFilm);
-//        filmService.addLike(secondFilm.getId(), firstUser.getId());
-//        filmService.addLike(secondFilm.getId(), secondUser.getId());
-//        filmService.addLike(secondFilm.getId(), thirdUser.getId());
-//
-//        thirdFilm = filmStorage.create(thirdFilm);
-//        filmService.addLike(thirdFilm.getId(), firstUser.getId());
-//        filmService.addLike(thirdFilm.getId(), secondUser.getId());
-//
-//        List<Film> listFilms = filmService.getPopular(5);
-//
-//        assertThat(listFilms).hasSize(3);
-//
-//        assertThat(Optional.of(listFilms.get(0)))
-//                .hasValueSatisfying(film ->
-//                        AssertionsForClassTypes.assertThat(film)
-//                                .hasFieldOrPropertyWithValue("name", "Avatar"));
-//
-//        assertThat(Optional.of(listFilms.get(1)))
-//                .hasValueSatisfying(film ->
-//                        AssertionsForClassTypes.assertThat(film)
-//                                .hasFieldOrPropertyWithValue("name", "One Flew Over the Cuckoo's Nest"));
-//
-//        assertThat(Optional.of(listFilms.get(2)))
-//                .hasValueSatisfying(film ->
-//                        AssertionsForClassTypes.assertThat(film)
-//                                .hasFieldOrPropertyWithValue("name", "Breakfast at Tiffany's"));
 //    }
 //
 //    @Test
