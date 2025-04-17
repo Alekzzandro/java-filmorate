@@ -59,9 +59,9 @@ public class LikeStorage {
                     rs.getString("description"),
                     rs.getDate("release_date").toLocalDate(),
                     rs.getInt("duration"),
-                    new HashSet<>(), // Лайки будут добавлены позже
+                    new HashSet<>(),
                     mpa,
-                    null // Жанры будут добавлены позже
+                    null
             );
         }, count);
 
