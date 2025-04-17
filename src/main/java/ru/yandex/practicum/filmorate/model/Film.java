@@ -1,41 +1,55 @@
 package ru.yandex.practicum.filmorate.model;
 
+import lombok.Builder;
+import lombok.Data;
+
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.experimental.FieldDefaults;
-import ru.yandex.practicum.filmorate.validation.ReleaseDateValid;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 @Data
-@FieldDefaults(level = AccessLevel.PRIVATE)
-@Builder(toBuilder = true)
-@AllArgsConstructor
+@Builder
 public class Film {
-    Long id;
+    private Long id;
+    @NotBlank
+    private String name;
+    @Size(min = 1, max = 200)
+    private String description;
+    @NotNull
+    private LocalDate releaseDate;
+    @Positive
+    private Integer duration;
+    private Set<Long> likes = new HashSet<>();
+    @NotNull
+    private Mpa mpa;
+    private Set<Genre> genres = new HashSet<>();
 
-    @NotBlank(message = "Название не должно быть пустым")
-    String name;
+    public Film(Long id, String name, String description, LocalDate releaseDate, Integer duration,
+                Set<Long> likes, Mpa mpa, Set<Genre> genres) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.releaseDate = releaseDate;
+        this.duration = duration;
+        this.likes = likes;
+        this.mpa = mpa;
+        this.genres = genres;
+    }
 
-    @Size(max = 200, message = "Максимальная длина описания — 200 символов")
-    String description;
-
-    @ReleaseDateValid
-    LocalDate releaseDate;
-
-    @Positive(message = "Продолжительность фильма должна быть положительным числом")
-    int duration;
-
-    Set<FilmGenre> genres;
-
-    MpaRating mpaRating;
-
-    final Set<Long> movieRating = new HashSet<>();
+    public Map<String, Object> toMap() {
+        Map<String, Object> values = new HashMap<>();
+        values.put("name", name);
+        values.put("description", description);
+        values.put("release_Date", releaseDate);
+        values.put("duration", duration);
+        values.put("mpa_rating_id", mpa.getId());
+        return values;
+    }
 }
